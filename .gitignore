@@ -27,4 +27,7 @@ profiles.clj
 /.lsp
 /.vscode
 
+#db
+/resources/db
+
 package-lock.json

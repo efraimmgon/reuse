@@ -1,11 +1,11 @@
 (ns reuse.utils.fsdb
   (:require
-   clojure.edn
-   clojure.pprint
-   [clojure.java.io :as io]
-   [me.raynes.fs :as fs])
+    clojure.edn
+    clojure.pprint
+    [clojure.java.io :as io]
+    [me.raynes.fs :as fs])
   (:import
-   java.time.Instant))
+    java.time.Instant))
 
 ;;; ----------------------------------------------------------------------------
 ;;; Filesystem-based Database
@@ -28,9 +28,9 @@
   (try
     (with-open [r (io/reader source)]
       (clojure.edn/read
-       {:readers {'inst #(Instant/parse %)}}
-       (java.io.PushbackReader.
-        r)))
+        {:readers {'inst #(Instant/parse %)}}
+        (java.io.PushbackReader.
+          r)))
 
     (catch java.io.IOException e
       (printf "Couldn't open '%s': %s\n" source (.getMessage e)))
@@ -70,7 +70,7 @@
   [path]
   (if (coll? path)
     (->> path
-         (map parse-coll))
+      (map parse-coll))
     [(parse-coll path)]))
 
 
@@ -119,14 +119,14 @@
     (keyword (-> (if (coll? cname)
                    (last cname)
                    cname)
-                 name)
-             (name field))
+               name)
+      (name field))
     field))
 
 (defn get-id
   [coll data]
   (get data
-       (get-collection-key coll :id)))
+    (get-collection-key coll :id)))
 
 
 
@@ -166,7 +166,7 @@
     (fs/mkdirs db-dir))
   (when-not (fs/exists? settings-path)
     (let [opts (merge {:use-qualified-keywords? false}
-                      opts)]
+                 opts)]
       (save-edn! settings-path opts)))
   (load-settings!))
 
@@ -194,6 +194,13 @@
       (fs/delete-dir path))))
 
 
+(defn exists?
+  [{:keys [coll]}]
+  (fs/exists?
+    (get-resource coll)))
+
+
+
 ;;; ----------------------------------------------------------------------------
 ;;; GET, SAVE, DELETE
 ;;; ----------------------------------------------------------------------------
@@ -205,17 +212,17 @@
   "Returns the contents of the document queried, if exists."
   [{:keys [coll id]}]
   (some-> (get-resource coll id)
-          (io/file "data.edn")
-          load-edn))
+    (io/file "data.edn")
+    load-edn))
 
 
 (defn get-all
   "Reads and returns the contents of the given collection."
   [{:keys [coll]}]
   (some->> (get-resource coll)
-           fs/list-dir
-           (map fs/name)
-           (map #(get-by-id {:coll coll :id %}))))
+    fs/list-dir
+    (map fs/name)
+    (map #(get-by-id {:coll coll :id %}))))
 
 
 (defn order-by-helper [order-by-key documents]
@@ -237,10 +244,10 @@
   ([{:keys [coll where order-by offset limit]}]
    (let [result
          (some->> (get-all {:coll coll})
-                  where (filter where)
-                  order-by (order-by-helper order-by)
-                  offset (drop offset)
-                  limit (take limit))]
+           where (filter where)
+           order-by (order-by-helper order-by)
+           offset (drop offset)
+           limit (take limit))]
      (if (= limit 1)
        (first result)
        result))))
@@ -251,9 +258,9 @@
    Returns `data` if successful."
   [{:keys [coll data]}]
   (assert (contains? data (get-collection-key coll :id))
-          (str
-           "You must provide an `id` key, or use `create!` to have it "
-           "automatically generated."))
+    (str
+      "You must provide an `id` key, or use `create!` to have it "
+      "automatically generated."))
 
   (let [id (get-id coll data)
         path (io/file (resource-path coll) (str id))]
@@ -261,7 +268,7 @@
     (fs/mkdirs path)
 
     (save-edn! (io/file path "data.edn")
-               data)))
+      data)))
 
 
 (defn create!
@@ -269,8 +276,8 @@
   [{:keys [coll data]}]
   (let [id (next-id!)
         data (assoc data
-                    (get-collection-key coll :id)
-                    id)]
+               (get-collection-key coll :id)
+               id)]
     (create-raw! {:coll coll :data data})))
 
 
@@ -291,8 +298,8 @@
       (if (= save-mode :set)
         (save-edn! doc-file data)
         (save-edn! doc-file
-                   (merge (get-by-id {:coll coll :id id})
-                          data))))))
+          (merge (get-by-id {:coll coll :id id})
+            data))))))
 
 
 (defn upsert!
@@ -313,7 +320,7 @@
 
   ;; delete the dir at id: /{db-dir}/{coll}/---->{id}/<----
   (some-> (io/file (resource-path coll) (str id))
-          fs/delete-dir))
+    fs/delete-dir))
 
 
 
@@ -358,8 +365,8 @@
   (get-all {:coll :users})
 
   (get-by-id {:coll :users, :id (-> (get-all {:coll :users})
-                                    first
-                                    :users/id)})
+                                  first
+                                  :users/id)})
 
 
 
@@ -391,8 +398,8 @@
   ; you can nest collections by your hearts content using vectors:
   (def user-id "533daebb-cf2a-4bb0-b20a-55811b87a729")
   (create-raw!
-   {:coll [:users user-id :profiles]
-    :data {:profiles/id "Guest"}})
+    {:coll [:users user-id :profiles]
+     :data {:profiles/id "Guest"}})
 
   ; all other operations work the same:
   (get-by-id {:coll [:users user-id :profiles]
